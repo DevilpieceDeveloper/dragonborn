@@ -1,0 +1,176 @@
+local Admins = { "YourUsername", "SecondUsername" } -- Add admin usernames here
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+
+local function isAdmin(player)
+    return table.find(Admins, player.Name) ~= nil
+end
+
+local function findPlayerByName(name)
+    for _, player in ipairs(Players:GetPlayers()) do
+        if string.lower(player.Name) == string.lower(name) then
+            return player
+        end
+    end
+    return nil
+end
+
+Players.PlayerAdded:Connect(function(player)
+    player.Chatted:Connect(function(message)
+        local args = message:split(" ")
+
+        if not isAdmin(player) then return end
+
+        -- Player Commands
+        if args[1] == "/goto" then
+            local target = findPlayerByName(args[2])
+            if target and target.Character and player.Character then
+                player.Character:PivotTo(target.Character:GetPivot())
+            end
+        elseif args[1] == "/bring" then
+            local target = findPlayerByName(args[2])
+            if target and target.Character and player.Character then
+                target.Character:PivotTo(player.Character:GetPivot())
+            end
+        elseif args[1] == "/kill" then
+            local target = findPlayerByName(args[2])
+            if target and target.Character then
+                target.Character:BreakJoints()
+            end
+        elseif args[1] == "/disguise" then
+            local target = findPlayerByName(args[2])
+            if target then
+                local targetDescription = target:LoadCharacterAppearance()
+                player.Character:FindFirstChildOfClass("Humanoid"):ApplyDescription(targetDescription)
+            end
+        elseif args[1] == "/freeze" then
+            local target = findPlayerByName(args[2])
+            if target and target.Character then
+                target.Character:FindFirstChild("HumanoidRootPart").Anchored = true
+            end
+        elseif args[1] == "/unfreeze" then
+            local target = findPlayerByName(args[2])
+            if target and target.Character then
+                target.Character:FindFirstChild("HumanoidRootPart").Anchored = false
+            end
+        elseif args[1] == "/speed" then
+            local speed = tonumber(args[2])
+            if speed and player.Character then
+                player.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = speed
+            end
+        elseif args[1] == "/jump" then
+            local jumpPower = tonumber(args[2])
+            if jumpPower and player.Character then
+                player.Character:FindFirstChildOfClass("Humanoid").JumpPower = jumpPower
+            end
+        elseif args[1] == "/invisible" then
+            if player.Character then
+                for _, part in ipairs(player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") or part:IsA("Decal") then
+                        part.Transparency = 1
+                    end
+                end
+            end
+        elseif args[1] == "/visible" then
+            if player.Character then
+                for _, part in ipairs(player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") or part:IsA("Decal") then
+                        part.Transparency = 0
+                    end
+                end
+            end
+
+        -- Environment Commands
+        elseif args[1] == "/time" then
+            local time = tonumber(args[2])
+            if time then
+                Lighting.TimeOfDay = tostring(time) .. ":00:00"
+            end
+        elseif args[1] == "/fog" then
+            local start = tonumber(args[2])
+            local endFog = tonumber(args[3])
+            if start and endFog then
+                Lighting.FogStart = start
+                Lighting.FogEnd = endFog
+            end
+        elseif args[1] == "/brightness" then
+            local brightness = tonumber(args[2])
+            if brightness then
+                Lighting.Brightness = brightness
+            end
+        elseif args[1] == "/gravity" then
+            local gravity = tonumber(args[2])
+            if gravity then
+                Workspace.Gravity = gravity
+            end
+        elseif args[1] == "/ambient" then
+            local r, g, b = tonumber(args[2]), tonumber(args[3]), tonumber(args[4])
+            if r and g and b then
+                Lighting.Ambient = Color3.new(r / 255, g / 255, b / 255)
+            end
+
+        -- Fun Commands
+        elseif args[1] == "/fling" then
+            local target = findPlayerByName(args[2])
+            if target and target.Character then
+                local rootPart = target.Character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    rootPart.Velocity = Vector3.new(0, 100, 0)
+                end
+            end
+        elseif args[1] == "/explode" then
+            local target = findPlayerByName(args[2])
+            if target and target.Character then
+                local explosion = Instance.new("Explosion")
+                explosion.Position = target.Character:FindFirstChild("HumanoidRootPart").Position
+                explosion.Parent = Workspace
+            end
+        elseif args[1] == "/fire" then
+            if player.Character then
+                local fire = Instance.new("Fire")
+                fire.Parent = player.Character:FindFirstChild("HumanoidRootPart")
+            end
+        elseif args[1] == "/nofire" then
+            if player.Character then
+                for _, obj in ipairs(player.Character:GetDescendants()) do
+                    if obj:IsA("Fire") then
+                        obj:Destroy()
+                    end
+                end
+            end
+        elseif args[1] == "/sparkles" then
+            if player.Character then
+                local sparkles = Instance.new("Sparkles")
+                sparkles.Parent = player.Character:FindFirstChild("HumanoidRootPart")
+            end
+        elseif args[1] == "/nosparkles" then
+            if player.Character then
+                for _, obj in ipairs(player.Character:GetDescendants()) do
+                    if obj:IsA("Sparkles") then
+                        obj:Destroy()
+                    end
+                end
+            end
+
+        -- Utility Commands
+        elseif args[1] == "/teleport" then
+            local x, y, z = tonumber(args[2]), tonumber(args[3]), tonumber(args[4])
+            if x and y and z and player.Character then
+                player.Character:PivotTo(CFrame.new(x, y, z))
+            end
+        elseif args[1] == "/godmode" then
+            if player.Character then
+                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                humanoid.MaxHealth = math.huge
+                humanoid.Health = humanoid.MaxHealth
+            end
+        elseif args[1] == "/ungodmode" then
+            if player.Character then
+                local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+                humanoid.MaxHealth = 100
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end
+    end)
+end)
